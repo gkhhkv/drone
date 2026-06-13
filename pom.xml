@@ -285,6 +285,8 @@
                                     <goal>check</goal>
                                 </goals>
                                 <configuration>
+                                    <!-- NVD API Key（从环境变量读取，避免提交到仓库） -->
+                                    <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
                                     <!-- CVSS 评分 ≥ 7（高危/严重）时阻断构建 -->
                                     <failBuildOnCVSS>7</failBuildOnCVSS>
                                     <!-- 报告输出格式 -->

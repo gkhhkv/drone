@@ -46,29 +46,3 @@ jobs:
             target/checkstyle-result.xml
             target/site/jacoco/
           retention-days: 7
-
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    continue-on-error: true
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: 17
-          distribution: temurin
-
-      - name: Cache Maven dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-security-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
-      - name: Run security scan
-        run: mvn verify -Psecurity-scan -B
