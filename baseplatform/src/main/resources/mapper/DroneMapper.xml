@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  无人机 MyBatis SQL 映射文件
+
+  本文件定义 DroneMapper 接口中各方法对应的 SQL 语句。
+
+  命名规范：
+  - 方法名与 SQL 块 id 对应
+  - #{} 使用 MyBatis 参数占位符（预编译，防止 SQL 注入）
+  - 数据库列名使用下划线命名（snake_case）→ Java 属性驼峰命名（camelCase）
+    由 application.yml 中 map-underscore-to-camel-case: true 自动处理
+
+  SQL 块说明：
+  - Base_Column_List: 可复用的列名片段，通过 <include> 引用
+  - findAll: 查询所有记录
+  - findById: 主键查询
+  - insert: 插入记录（包含 ID 字段，非自动生成）
+  - update: 按 ID 全字段更新
+  - deleteById: 按 ID 删除
+  - findMaxId: 查询最大 ID（用于计算新 ID = MAX(id) + 1）
+  - decrementIdsAfter: 删除后将后续 ID 减 1（按 ID ASC 顺序避免主键冲突）
+-->
+<mapper namespace="com.md.basePlatform.repository.mapper.DroneMapper">
+
+    <!-- 基础列名片段：所有查询共用，避免重复书写列名 -->
+    <sql id="Base_Column_List">
+        id, serial_number, model, battery_percent, max_flight_minutes, status
+    </sql>
+
+    <!-- 查询全部无人机 -->
+    <select id="findAll" resultType="com.md.basePlatform.domain.Drone">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM drone
+    </select>
+
+    <!-- 根据主键查询单个无人机 -->
+    <select id="findById" resultType="com.md.basePlatform.domain.Drone">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM drone
+        WHERE id = #{id}
+    </select>
+
+    <!-- 插入新无人机（包含 ID 字段，ID 由 Service 层预先计算） -->
+    <insert id="insert" parameterType="com.md.basePlatform.domain.Drone">
+        INSERT INTO drone (id, serial_number, model, battery_percent, max_flight_minutes, status)
+        VALUES (#{id}, #{serialNumber}, #{model}, #{batteryPercent}, #{maxFlightMinutes}, #{status})
+    </insert>
+
+    <!-- 按主键更新无人机（全字段覆盖） -->
+    <update id="update" parameterType="com.md.basePlatform.domain.Drone">
+        UPDATE drone
+        SET serial_number = #{serialNumber},
+            model = #{model},
+            battery_percent = #{batteryPercent},
+            max_flight_minutes = #{maxFlightMinutes},
+            status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 按主键删除无人机 -->
+    <delete id="deleteById">
+        DELETE FROM drone WHERE id = #{id}
+    </delete>
+
+    <!-- 查询当前最大 ID，空表时 COALESCE 返回 0 -->
+    <select id="findMaxId" resultType="java.lang.Long">
+        SELECT COALESCE(MAX(id), 0) FROM drone
+    </select>
+
+    <!--
+      将大于指定 ID 的记录的 ID 减 1
+      ORDER BY id ASC 确保按升序更新，避免同时更新时发生主键冲突
+      例如：删除 id=3 后，原 id=4 → 3, id=5 → 4, ...
+    -->
+    <update id="decrementIdsAfter">
+        UPDATE drone SET id = id - 1 WHERE id > #{id} ORDER BY id ASC
+    </update>
+</mapper>

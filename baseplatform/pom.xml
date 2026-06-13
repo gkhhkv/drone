@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================
+  无人机管理平台 — Maven 项目对象模型（POM）
+  ============================================================
+
+  POM 是 Maven 项目的核心配置文件，定义了：
+  1. 项目坐标（groupId + artifactId + version）—— Maven 仓库中唯一定位本项目
+  2. 父 POM（spring-boot-starter-parent）—— 继承 Spring Boot 的默认配置
+  3. 依赖列表（dependencies）—— 项目用到的第三方库
+  4. 构建插件（build/plugins）—— 打包方式
+
+  Maven 学习要点：
+  - <scope> 控制依赖的可见范围：
+    * compile（默认）：编译、运行、测试都可用
+    * runtime：编译时不需要，运行时需要（如 JDBC 驱动）
+    * test：仅测试时可用（如 JUnit、Mockito）
+  - ${变量名} 引用 <properties> 中定义的版本号，实现版本统一管理
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<!--
+	  父 POM：spring-boot-starter-parent
+	  作用：预定义了 Spring Boot 相关依赖的版本号，无需在子 POM 中重复声明版本。
+	  同时提供了 Maven 插件默认配置（如 maven-compiler-plugin 的 Java 版本）。
+	-->
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.2.13.RELEASE</version>
+		<relativePath/> <!-- 从 Maven 中央仓库查找父 POM，不从本地相对路径找 -->
+	</parent>
+
+	<!-- 项目坐标：com.md:basePlatform:0.0.1-SNAPSHOT -->
+	<groupId>com.md</groupId>
+	<artifactId>basePlatform</artifactId>
+	<version>0.0.1-SNAPSHOT</version> <!-- SNAPSHOT = 开发中的快照版本 -->
+	<name/>
+	<description/>
+	<url/>
+	<licenses>
+		<license/>
+	</licenses>
+	<developers>
+		<developer/>
+	</developers>
+	<scm>
+		<connection/>
+		<developerConnection/>
+		<tag/>
+		<url/>
+	</scm>
+
+	<!--
+	  版本号统一管理
+	  为什么这样做？如果直接在 dependencies 中写死版本号，后续升级需要改多处。
+	  统一在 properties 中定义，修改一处即可全局生效。
+	-->
+	<properties>
+		<java.version>1.8</java.version>                           <!-- Java 编译版本（1.8 = Java 8） -->
+		<mybatis.version>3.5.16</mybatis.version>                  <!-- MyBatis 核心库版本 -->
+		<mybatis-spring-boot.version>2.1.4</mybatis-spring-boot.version> <!-- MyBatis-Spring Boot 集成版本 -->
+		<mysql.connector.version>8.0.33</mysql.connector.version>  <!-- MySQL 驱动版本（当前未通过变量引用） -->
+	</properties>
+
+	<!-- ============================================================ -->
+	<!-- 项目依赖                                                -->
+	<!-- ============================================================ -->
+	<dependencies>
+
+		<!--
+		  Spring Boot 核心 Starter（自动配置、日志、YAML 解析等基础功能）
+		  每个 Spring Boot 项目都至少需要此依赖。
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
+		</dependency>
+
+		<!--
+		  Spring Web MVC Starter
+		  提供：内嵌 Tomcat 容器 + Spring MVC 框架 + Jackson JSON 序列化
+		  引入此依赖后，@RestController 才能正常工作。
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<!--
+		  Jakarta Bean Validation Starter
+		  提供：@Valid、@NotNull、@Size、@Min、@Max 等数据校验注解
+		  用于校验前端请求参数，校验失败时抛出 MethodArgumentNotValidException
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!--
+		  Spring JDBC Starter
+		  提供：JdbcTemplate、事务管理、数据源自动配置
+		  是 MyBatis 和数据库连接池（Druid）的底层基础。
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jdbc</artifactId>
+		</dependency>
+
+		<!--
+		  MyBatis-Spring Boot 集成 Starter
+		  自动扫描 @Mapper 注解、注册 SqlSessionFactory、管理 MyBatis 生命周期
+		  核心功能：让我们可以用 @Mapper + XML 的方式操作数据库
+		-->
+		<dependency>
+			<groupId>org.mybatis.spring.boot</groupId>
+			<artifactId>mybatis-spring-boot-starter</artifactId>
+			<version>${mybatis-spring-boot.version}</version>
+		</dependency>
+
+		<!--
+		  MyBatis 核心库
+		  注意：mybatis-spring-boot-starter 不包含 mybatis 核心 jar，
+		  所以需要单独引入 mybatis 依赖。（有些版本已内置，此处显式声明更安全）
+		-->
+		<dependency>
+			<groupId>org.mybatis</groupId>
+			<artifactId>mybatis</artifactId>
+			<version>${mybatis.version}</version>
+		</dependency>
+
+		<!--
+		  Druid 数据库连接池（阿里巴巴开源）
+		  替代 Spring Boot 默认的 HikariCP 连接池。
+		  特点：内置 SQL 监控、防火墙、Web 管理界面。
+		  学习建议：了解连接池的作用——复用数据库连接，避免频繁创建/销毁 TCP 连接的开销。
+		-->
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>druid-spring-boot-starter</artifactId>
+			<version>1.2.24</version>
+		</dependency>
+
+		<!--
+		  MySQL JDBC 驱动
+		  负责 Java 程序与 MySQL 数据库之间的通信协议。
+		  运行时依赖（scope 未指定，默认 compile），Spring Boot 根据此驱动自动配置 MySQL 数据源。
+		-->
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>8.0.30</version>
+		</dependency>
+
+		<!--
+		  SQLite JDBC 驱动
+		  scope=runtime 表示编译时不需要（代码中不直接引用 SQLite 类），
+		  但运行时必须存在（因为数据源 URL 中包含 jdbc:sqlite:）。
+		-->
+		<dependency>
+			<groupId>org.xerial</groupId>
+			<artifactId>sqlite-jdbc</artifactId>
+			<version>3.50.3.0</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!--
+		  Apache Shiro 安全框架 Starter
+		  提供：认证（登录验证）+ 授权（角色/权限判断）+ 过滤器链（URL 访问控制）
+		  对比：Spring Security 功能更强但更重，Shiro 更轻量、学习曲线更平缓。
+		-->
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-spring-boot-starter</artifactId>
+			<version>1.7.1</version>
+		</dependency>
+
+		<!--
+		  Spring Boot 测试 Starter
+		  scope=test 表示生产环境不会打包此依赖。
+		  包含：JUnit 5 + Mockito + Spring Test + MockMvc
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!--
+		  MyBatis 测试 Starter
+		  提供 MyBatis 相关的测试工具（如 @MybatisTest 切片测试支持）
+		-->
+		<dependency>
+			<groupId>org.mybatis.spring.boot</groupId>
+			<artifactId>mybatis-spring-boot-starter-test</artifactId>
+			<version>${mybatis-spring-boot.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+	<!-- ============================================================ -->
+	<!-- 构建配置                                                -->
+	<!-- ============================================================ -->
+	<build>
+		<plugins>
+			<!--
+			  Spring Boot Maven Plugin
+			  功能：mvn package 时生成可执行的 Fat JAR（包含所有依赖和嵌入 Tomcat）
+			  直接通过 java -jar 启动，无需部署到外部应用服务器。
+			-->
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

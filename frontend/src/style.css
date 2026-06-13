@@ -1,0 +1,36 @@
+/**
+ * 无人机信息管理系统 — 全局样式
+ *
+ * 定义应用的全局样式规则，作用于所有页面和组件。
+ *
+ * 重置规则：
+ * - * 选择器：统一盒模型为 border-box，清除默认内外边距
+ * - body：设置全局字体、背景色、文字颜色
+ * - #app：限制内容最大宽度并居中
+ *
+ * 字体回退策略：
+ * Microsoft YaHei UI → PingFang SC → Arial → sans-serif
+ * 优先使用 Windows 微软雅黑，次选 macOS 苹方，最后回退到系统无衬线字体
+ */
+
+/* 全局盒模型重置：所有元素的 width/height 包含 padding 和 border */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 页面主体样式 */
+body {
+  font-family: 'Microsoft YaHei UI', 'PingFang SC', Arial, sans-serif;
+  background: #f4f6f8;
+  color: #1f2937;
+  min-height: 100vh;
+}
+
+/* Vue 应用根容器 */
+#app {
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
