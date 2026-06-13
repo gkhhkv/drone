@@ -23,17 +23,16 @@
         <property name="eachLine" value="true"/>
     </module>
 
+    <!-- 单行最大字符数：120（必须直接放在 Checker 下） -->
+    <module name="LineLength">
+        <property name="max" value="120"/>
+        <property name="ignorePattern" value="^ *\* *[^ ]+$"/>
+    </module>
+
     <!-- 树形结构检查（逐文件解析 AST） -->
     <module name="TreeWalker">
 
-        <!-- ===== 行长度与方法规模 ===== -->
-
-        <!-- 单行最大字符数：120 -->
-        <module name="LineLength">
-            <property name="max" value="120"/>
-            <!-- 忽略以 * 开头的注释行（Javadoc 注释通常较长） -->
-            <property name="ignorePattern" value="^ *\* *[^ ]+$"/>
-        </module>
+        <!-- ===== 方法规模 ===== -->
 
         <!-- 方法体最大行数：150 行 -->
         <module name="MethodLength">

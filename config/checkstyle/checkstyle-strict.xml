@@ -23,16 +23,16 @@
         <property name="eachLine" value="true"/>
     </module>
 
+    <!-- 单行最大字符数：120（必须直接放在 Checker 下） -->
+    <module name="LineLength">
+        <property name="max" value="120"/>
+        <property name="ignorePattern" value="^ *\* *[^ ]+$"/>
+    </module>
+
     <!-- 树形结构检查（逐文件解析 AST） -->
     <module name="TreeWalker">
 
-        <!-- ===== 行长度与方法规模（继承自 checkstyle.xml） ===== -->
-
-        <!-- 单行最大字符数：120 -->
-        <module name="LineLength">
-            <property name="max" value="120"/>
-            <property name="ignorePattern" value="^ *\* *[^ ]+$"/>
-        </module>
+        <!-- ===== 方法规模 ===== -->
 
         <!-- 方法体最大行数：150 行 -->
         <module name="MethodLength">
@@ -45,7 +45,7 @@
             <property name="max" value="7"/>
         </module>
 
-        <!-- ===== 代码块规范（继承自 checkstyle.xml） ===== -->
+        <!-- ===== 代码块规范 ===== -->
 
         <!-- 禁止空代码块 -->
         <module name="EmptyBlock">
@@ -77,7 +77,7 @@
                                             STATIC_INIT, INSTANCE_INIT"/>
         </module>
 
-        <!-- ===== 空格规范（继承自 checkstyle.xml） ===== -->
+        <!-- ===== 空格规范 ===== -->
 
         <!-- 操作符周围必须有空格 -->
         <module name="WhitespaceAround">
@@ -100,7 +100,7 @@
                                             STAR, STAR_ASSIGN, TYPE_EXTENSION_AND"/>
         </module>
 
-        <!-- ===== Import 规范（继承自 checkstyle.xml） ===== -->
+        <!-- ===== Import 规范 ===== -->
 
         <!-- 禁止未使用的 import -->
         <module name="UnusedImports">
@@ -112,10 +112,7 @@
 
         <!-- ===== Javadoc 强制检查（严格规则新增） ===== -->
 
-        <!--
-            公共方法必须有 Javadoc 注释
-            要求：@param（有参数时）、@return（非 void 时）、@throws（有受检异常时）
-        -->
+        <!-- 公共方法必须有 Javadoc 注释 -->
         <module name="JavadocMethod">
             <property name="accessModifiers" value="public"/>
             <property name="allowMissingParamTags" value="false"/>
@@ -123,26 +120,17 @@
             <property name="tokens" value="METHOD_DEF, ANNOTATION_FIELD_DEF"/>
         </module>
 
-        <!--
-            公共类、接口、枚举必须有 Javadoc 注释
-            要求：类级别 Javadoc 描述类的职责
-        -->
+        <!-- 公共类、接口、枚举必须有 Javadoc 注释 -->
         <module name="JavadocType">
             <property name="scope" value="public"/>
         </module>
 
-        <!--
-            公共字段必须有 Javadoc 注释
-            注意：配合 VisibilityModifier 使用，通常只有常量（static final）字段是 public
-        -->
+        <!-- 公共字段必须有 Javadoc 注释 -->
         <module name="JavadocVariable">
             <property name="scope" value="public"/>
         </module>
 
-        <!--
-            缺少 Javadoc 时报错（补充 JavadocMethod 未覆盖的场景）
-            检查公共方法缺少 Javadoc 的情况
-        -->
+        <!-- 缺少 Javadoc 时报错 -->
         <module name="MissingJavadocMethod">
             <property name="scope" value="public"/>
             <property name="minLineCount" value="0"/>
@@ -153,17 +141,12 @@
 
         <!-- ===== 可见性与设计规范（严格规则新增） ===== -->
 
-        <!--
-            字段必须是 private（封装原则）
-            例外：static final 常量可以是 public
-        -->
+        <!-- 字段必须是 private（封装原则） -->
         <module name="VisibilityModifier">
             <property name="protectedAllowed" value="false"/>
             <property name="packageAllowed" value="false"/>
-            <!-- 允许 public static final 常量 -->
             <property name="allowPublicFinalFields" value="false"/>
             <property name="allowPublicImmutableFields" value="false"/>
-            <!-- 忽略带有特定注解的字段（如 @Inject、@Autowired、@Value） -->
             <property name="ignoreAnnotationCanonicalNames"
                       value="org.springframework.beans.factory.annotation.Autowired,
                              org.springframework.beans.factory.annotation.Value,
@@ -173,17 +156,10 @@
                              lombok.Setter"/>
         </module>
 
-        <!--
-            只有私有构造器的类必须声明为 final
-            防止此类被继承（因为子类无法调用父类构造器）
-        -->
+        <!-- 只有私有构造器的类必须声明为 final -->
         <module name="FinalClass"/>
 
-        <!--
-            工具类（所有方法均为 static）必须有私有构造器
-            防止工具类被实例化
-            例外：Spring @Configuration 类、枚举类
-        -->
+        <!-- 工具类必须有私有构造器 -->
         <module name="HideUtilityClassConstructor"/>
 
     </module>
