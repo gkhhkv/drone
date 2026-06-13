@@ -1,0 +1,54 @@
+# ============================================================
+# 无人机管理平台 — 后端配置文件
+# ============================================================
+# 支持双环境 Profile：
+#   - mysql：MySQL 数据库（默认激活）
+#   - sqlite：SQLite 文件数据库
+# 启动时通过 --spring.profiles.active=sqlite 切换
+# ============================================================
+
+spring:
+  application:
+    name: basePlatform        # 应用名称
+  profiles:
+    active: mysql             # 默认激活的 profile
+
+# MyBatis 全局配置
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml  # XML 映射文件路径
+  configuration:
+    # 下划线转驼峰：数据库 serial_number → Java serialNumber
+    map-underscore-to-camel-case: true
+
+# ============================================================
+# MySQL 环境配置
+# ============================================================
+# 使用方式：保留 spring.profiles.active: mysql（默认）
+# 环境变量覆盖：MYSQL_HOST, MYSQL_PORT, MYSQL_DB, MYSQL_USER, MYSQL_PASSWORD
+---
+spring:
+  profiles: mysql
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:base_platform}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:060420}
+    schema: classpath:schema-mysql.sql   # 启动时执行的建表脚本
+    initialization-mode: always          # 每次启动都执行 schema 脚本
+
+# ============================================================
+# SQLite 环境配置
+# ============================================================
+# 使用方式：--spring.profiles.active=sqlite
+# 数据库文件路径：默认 ./data/base_platform.db
+# 环境变量 SQLITE_DB_PATH 可覆盖数据库文件位置
+---
+spring:
+  profiles: sqlite
+  datasource:
+    driver-class-name: org.sqlite.JDBC
+    url: jdbc:sqlite:${SQLITE_DB_PATH:./data/base_platform.db}
+    username:   # SQLite 无需用户名密码
+    password:
+    schema: classpath:schema-sqlite.sql  # 启动时执行的建表脚本
+    initialization-mode: always          # 每次启动都执行 schema 脚本

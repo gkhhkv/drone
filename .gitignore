@@ -1,0 +1,15 @@
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Maven build
+target/
+.mvn/wrapper/maven-wrapper.jar
+
+# Database files
+*.db
+
+# OS
+.DS_Store
+Thumbs.db

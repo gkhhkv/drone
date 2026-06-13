@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>无人机数据面板</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #333; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+    h1 { text-align: center; margin-bottom: 24px; font-size: 24px; color: #1a1a1a; }
+
+    .toolbar { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+    .btn { padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.85; }
+    .btn-add { background: #1890ff; color: #fff; }
+    .btn-edit { background: #faad14; color: #fff; }
+    .btn-delete { background: #ff4d4f; color: #fff; }
+    .btn-cancel { background: #d9d9d9; color: #333; }
+    .btn-save { background: #52c41a; color: #fff; }
+
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+    th { background: #fafafa; font-weight: 600; font-size: 14px; }
+    td { font-size: 14px; }
+    tr:hover { background: #fafafa; }
+
+    .status { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 12px; }
+    .status-IDLE { background: #e6f7ff; color: #1890ff; }
+    .status-CHARGING { background: #fff7e6; color: #fa8c16; }
+    .status-IN_MAINTENANCE { background: #fff1f0; color: #ff4d4f; }
+
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); z-index: 1000; justify-content: center; align-items: center; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: #fff; border-radius: 8px; padding: 24px; width: 480px; max-width: 90vw; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .modal h3 { margin-bottom: 20px; font-size: 18px; }
+    .modal .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; margin-bottom: 4px; font-size: 14px; color: #555; }
+    .form-group input, .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; outline: none; transition: border-color 0.2s; }
+    .form-group input:focus, .form-group select:focus { border-color: #1890ff; }
+    .form-error { color: #ff4d4f; font-size: 13px; margin-top: 4px; }
+
+    .toast { position: fixed; top: 20px; right: 20px; padding: 10px 20px; border-radius: 6px; color: #fff; font-size: 14px; z-index: 2000; opacity: 0; transition: opacity 0.3s; }
+    .toast.success { background: #52c41a; opacity: 1; }
+    .toast.error { background: #ff4d4f; opacity: 1; }
+
+    .empty { text-align: center; padding: 60px 0; color: #999; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>无人机数据面板</h1>
+
+    <div class="toolbar">
+      <button class="btn btn-add" onclick="openAddModal()">+ 新增无人机</button>
+    </div>
+
+    <table id="droneTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>序列号</th>
+          <th>型号</th>
+          <th>电量 (%)</th>
+          <th>最大飞行 (分钟)</th>
+          <th>状态</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="droneTbody"></tbody>
+    </table>
+    <div id="emptyHint" class="empty" style="display:none">暂无无人机数据</div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h3 id="modalTitle">新增无人机</h3>
+      <form id="droneForm" onsubmit="return handleSubmit(event)">
+        <div class="form-group">
+          <label>序列号</label>
+          <input name="serialNumber" placeholder="如 SN-1704067200000" />
+        </div>
+        <div class="form-group">
+          <label>型号</label>
+          <input name="model" placeholder="如 Mavic-Air" />
+        </div>
+        <div class="form-group">
+          <label>电量百分比 (0-100)</label>
+          <input name="batteryPercent" type="number" min="0" max="100" />
+        </div>
+        <div class="form-group">
+          <label>最大飞行时长 (分钟)</label>
+          <input name="maxFlightMinutes" type="number" min="0" />
+        </div>
+        <div class="form-group">
+          <label>状态</label>
+          <select name="status">
+            <option value="">-- 请选择 --</option>
+            <option value="IDLE">空闲</option>
+            <option value="CHARGING">充电中</option>
+            <option value="IN_MAINTENANCE">维护中</option>
+          </select>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn btn-cancel" onclick="closeModal()">取消</button>
+          <button type="submit" class="btn btn-save">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+const API = '/api/drones';
+
+let editingId = null;
+
+// ---- API calls ----
+
+async function api(path, options = {}) {
+  const res = await fetch(path, { headers: { 'Content-Type': 'application/json' }, ...options });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.message || '请求失败');
+  return json.data;
+}
+
+// ---- toast ----
+
+let toastTimer;
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = 'toast', 2000);
+}
+
+// ---- load ----
+
+async function loadDrones() {
+  try {
+    const list = await api(API);
+    const tbody = document.getElementById('droneTbody');
+    const empty = document.getElementById('emptyHint');
+    if (!list || list.length === 0) {
+      tbody.innerHTML = '';
+      empty.style.display = '';
+      return;
+    }
+    empty.style.display = 'none';
+    tbody.innerHTML = list.map(d => `
+      <tr>
+        <td>${d.id}</td>
+        <td>${esc(d.serialNumber)}</td>
+        <td>${esc(d.model)}</td>
+        <td>${d.batteryPercent ?? '-'}</td>
+        <td>${d.maxFlightMinutes ?? '-'}</td>
+        <td><span class="status status-${d.status}">${statusLabel(d.status)}</span></td>
+        <td>
+          <button class="btn btn-edit" onclick="openEditModal(${d.id})">编辑</button>
+          <button class="btn btn-delete" onclick="deleteDrone(${d.id})">删除</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    showToast('加载失败: ' + e.message, 'error');
+  }
+}
+
+// ---- modal ----
+
+function openModal(title) {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('droneForm').reset();
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+function openAddModal() { openModal('新增无人机'); }
+
+async function openEditModal(id) {
+  try {
+    const d = await api(API + '/' + id);
+    editingId = d.id;
+    document.getElementById('modalTitle').textContent = '编辑无人机 #' + d.id;
+    const form = document.getElementById('droneForm');
+    form.serialNumber.value = d.serialNumber || '';
+    form.model.value = d.model || '';
+    form.batteryPercent.value = d.batteryPercent ?? '';
+    form.maxFlightMinutes.value = d.maxFlightMinutes ?? '';
+    form.status.value = d.status || '';
+    document.getElementById('modalOverlay').classList.add('active');
+  } catch (e) {
+    showToast('获取详情失败: ' + e.message, 'error');
+  }
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+}
+
+// ---- submit ----
+
+async function handleSubmit(e) {
+  e.preventDefault();
+  const form = e.target;
+  const body = {
+    serialNumber: form.serialNumber.value,
+    model: form.model.value,
+    batteryPercent: form.batteryPercent.value ? Number(form.batteryPercent.value) : null,
+    maxFlightMinutes: form.maxFlightMinutes.value ? Number(form.maxFlightMinutes.value) : null,
+    status: form.status.value || null
+  };
+
+  try {
+    if (editingId) {
+      await api(API + '/' + editingId, { method: 'PUT', body: JSON.stringify(body) });
+    } else {
+      await api(API, { method: 'POST', body: JSON.stringify(body) });
+    }
+    closeModal();
+    showToast(editingId ? '更新成功' : '创建成功', 'success');
+    loadDrones();
+  } catch (e) {
+    showToast('保存失败: ' + e.message, 'error');
+  }
+}
+
+// ---- delete ----
+
+async function deleteDrone(id) {
+  if (!confirm('确定删除无人机 #' + id + ' 吗？')) return;
+  try {
+    await api(API + '/' + id, { method: 'DELETE' });
+    showToast('删除成功', 'success');
+    loadDrones();
+  } catch (e) {
+    showToast('删除失败: ' + e.message, 'error');
+  }
+}
+
+// ---- helpers ----
+
+function esc(s) { return s == null ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function statusLabel(s) {
+  const map = { IDLE: '空闲', CHARGING: '充电中', IN_MAINTENANCE: '维护中' };
+  return map[s] || s;
+}
+
+// ---- init ----
+
+loadDrones();
+</script>
+</body>
+</html>
